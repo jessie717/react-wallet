@@ -1,51 +1,20 @@
-import { useAccount } from 'wagmi'
+import { ConnectButton } from '@rainbow-me/rainbowkit'
+
+import Header from './components/header'
 import './App.css'
-import {
-  ConnectButton,
-  useAccountModal,
-  useChainModal,
-  useConnectModal,
-} from '@rainbow-me/rainbowkit'
 
 function App() {
-  const { isConnected } = useAccount()
-  const { openConnectModal } = useConnectModal()
-  const { openAccountModal } = useAccountModal()
-  const { openChainModal } = useChainModal()
-
-  return (
-    <>
-      <div>
-        <ConnectButton
-          accountStatus={{ smallScreen: 'avatar', largeScreen: 'full' }}
-        />
-
-        <div className='my-4 text-3xl'>use hooks</div>
-        <div className='flex gap-2'>
-          {isConnected ? (
-            <>
-              <div
-                className='px-4 py-2 border rounded-xl bg-slate-400 cursor-pointer hover:bg-slate-300'
-                onClick={openAccountModal}>
-                open account modal
-              </div>
-              <div
-                className='px-4 py-2 border rounded-xl bg-slate-400 cursor-pointer hover:bg-slate-300'
-                onClick={openChainModal}>
-                open chain modal
-              </div>{' '}
-            </>
-          ) : (
-            <div
-              className='px-4 py-2 border rounded-xl bg-slate-400 cursor-pointer hover:bg-slate-300'
-              onClick={openConnectModal}>
-              open connect modal
-            </div>
-          )}
-        </div>
-      </div>
-    </>
-  )
+	return (
+		<>
+			<Header />
+			<div className="flex flex-col">
+				<div className="px-2 mt-10 mb-4 text-start text-2xl">
+					Also we can use 'ConnectButton' component to connect wallet
+				</div>
+				<ConnectButton accountStatus={{ smallScreen: 'avatar', largeScreen: 'full' }} />
+			</div>
+		</>
+	)
 }
 
 export default App
