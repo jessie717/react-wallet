@@ -3,8 +3,9 @@ import { useBalance } from 'wagmi'
 
 export default function Balance() {
 	const result = useBalance({
-		address: '0x8e087455726de92317889d0e70600ec3'
+		address: '0xC44D0bC59eDF90d13988c3820953ACeA048BcEd2'
 	})
+
 	const getAccountBalance = () => {
 		console.log('result', result)
 	}
