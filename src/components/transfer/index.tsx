@@ -1,23 +1,15 @@
 import { useState } from 'react'
 import { useSendTransaction } from 'wagmi'
-import { getAccount, getBalance } from 'wagmi/actions'
-import { Address, parseEther } from 'viem'
-import { Button, Modal } from 'antd'
+import { estimateGas, getAccount, getBalance, getGasPrice } from 'wagmi/actions'
+import { Address, formatEther, parseEther } from 'viem'
+import { Button, Modal, Spin, message } from 'antd'
+// import { getGasPrice } from '@wagmi/core'
 
 import config from '../../config/index.tsx'
 
-export default function Transfer() {
-	const [balance, setBalance] = useState(0)
-	const { sendTransaction } = useSendTransaction()
-	const sendTransfer = (_: React.MouseEvent<HTMLElement, MouseEvent>, address: Address) => {
-		if (balance > 0) {
-			sendTransaction({
-				to: address,
-				value: parseEther('0.01')
-			})
-		}
-	}
+const [messageApi, contextHolder] = message.useMessage()
 
+export default function Transfer() {
 	const [transferModal, setTransferModal] = useState(false)
 	const [addresses, setAddresses] = useState<readonly Address[]>()
 	const openTransferModal = async () => {
@@ -30,7 +22,39 @@ export default function Transfer() {
 			setAddresses(account.addresses)
 		}
 	}
-	const transferModalOkHandler = () => {
+	// 转账 0.01ETH TODO: 手动输入转账金额
+	const [balance, setBalance] = useState(0)
+	const { sendTransaction } = useSendTransaction()
+	const sendTransfer = async (_: React.MouseEvent<HTMLElement, MouseEvent>, address: Address) => {
+		const gasPrice = await getGasPrice(config)
+		const gas = await estimateGas(config, {
+			to: address,
+			value: parseEther('0.01')
+		})
+		const gasService = Number(formatEther(gas * gasPrice))
+		if (balance - gasService > 0.01) {
+			const result = sendTransaction(
+				{
+					to: address,
+					value: parseEther('0.01')
+				},
+				{
+					onSuccess: (res) => {
+						console.log('res', res)
+						messageApi.open({
+							type: 'success',
+							content: `Transaction Hash: ${res}`
+						})
+					}
+				}
+			)
+			console.log('result', result)
+		}
+	}
+	//
+	const transferModalHandler = () => {
+		setBalance(0)
+		setAddresses([])
 		setTransferModal(false)
 	}
 
@@ -43,20 +67,25 @@ export default function Transfer() {
 				>
 					转账
 				</div>
-				<Modal title="账户列表" open={transferModal} onOk={transferModalOkHandler}>
+				<Modal title="账户列表" open={transferModal} onOk={transferModalHandler} onCancel={transferModalHandler}>
 					<div className="flex flex-col">
-						{addresses?.map((address, index) => (
-							<div
-								key={address}
-								className="flex justify-start items-center my-1 py-1 px-2 text-center border rounded shadow"
-							>
-								<span className="font-bold w-14">{index + 1}、</span>
-								<span className="flex grow">{address}</span>
-								<Button danger onClick={(e) => sendTransfer(e, address)}>
-									转账
-								</Button>
-							</div>
-						))}
+						{addresses ? (
+							addresses?.map((address, index) => (
+								<div
+									key={address}
+									className="flex justify-start items-center my-1 py-1 px-2 text-center border rounded shadow"
+								>
+									<span className="font-bold w-14">{index + 1}、</span>
+									<span className="flex grow">{address}</span>
+									<Button danger onClick={(e) => sendTransfer(e, address)}>
+										转账
+									</Button>
+									{contextHolder}
+								</div>
+							))
+						) : (
+							<Spin />
+						)}
 					</div>
 				</Modal>
 			</div>
